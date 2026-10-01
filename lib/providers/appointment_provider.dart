@@ -78,7 +78,7 @@ class AppointmentProvider extends ChangeNotifier {
       'Pinscher',
       'Bulldog Francês',
       'Persa',
-      'Siamês'
+      'Siamês',
     };
     for (var app in _appointments) {
       if (app.petBreed.trim().isNotEmpty) {

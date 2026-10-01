@@ -1,19 +1,22 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
+import 'firebase_options.dart';
 import 'providers/appointment_provider.dart';
-import 'screens/home_screen.dart';
+import 'screens/auth_gate.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  initializeDateFormatting('pt_BR', null).then((_) {
-    runApp(
-      ChangeNotifierProvider(
-        create: (_) => AppointmentProvider(),
-        child: const MainApp(),
-      ),
-    );
-  });
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await initializeDateFormatting('pt_BR', null);
+
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => AppointmentProvider(),
+      child: const MainApp(),
+    ),
+  );
 }
 
 class MainApp extends StatelessWidget {
@@ -37,11 +40,11 @@ class MainApp extends StatelessWidget {
           onSurface: darkSlate,
         ),
         textTheme: ThemeData.light().textTheme.apply(
-              bodyColor: darkSlate,
-              displayColor: darkSlate,
-            ),
+          bodyColor: darkSlate,
+          displayColor: darkSlate,
+        ),
       ),
-      home: const HomeScreen(),
+      home: const AuthGate(),
     );
   }
 }

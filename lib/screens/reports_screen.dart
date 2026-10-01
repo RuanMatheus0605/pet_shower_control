@@ -32,7 +32,8 @@ class ReportsScreen extends StatelessWidget {
         pendingRevenue += app.price;
       }
 
-      serviceCounts[app.serviceName] = (serviceCounts[app.serviceName] ?? 0) + 1;
+      serviceCounts[app.serviceName] =
+          (serviceCounts[app.serviceName] ?? 0) + 1;
 
       if (app.clientName.trim().isNotEmpty) {
         clientsMap[app.clientName] = app.clientPhone;
@@ -50,10 +51,7 @@ class ReportsScreen extends StatelessWidget {
         ),
         title: const Text(
           'Relatórios & Clientes',
-          style: TextStyle(
-            color: darkSlate,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: darkSlate, fontWeight: FontWeight.bold),
         ),
       ),
       body: SafeArea(
@@ -155,7 +153,10 @@ class ReportsScreen extends StatelessWidget {
               const SizedBox(height: 24),
 
               // Seção Diretório de Clientes
-              _buildSectionTitle('Diretório de Clientes (${clientsMap.length})', darkSlate),
+              _buildSectionTitle(
+                'Diretório de Clientes (${clientsMap.length})',
+                darkSlate,
+              ),
               const SizedBox(height: 12),
               clientsMap.isEmpty
                   ? _buildEmptyText('Nenhum cliente cadastrado ainda.')
@@ -169,7 +170,8 @@ class ReportsScreen extends StatelessWidget {
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: clientsMap.length,
-                        separatorBuilder: (context, index) => const Divider(height: 1),
+                        separatorBuilder: (context, index) =>
+                            const Divider(height: 1),
                         itemBuilder: (context, index) {
                           final name = clientsMap.keys.elementAt(index);
                           final phone = clientsMap[name]!;
@@ -177,8 +179,13 @@ class ReportsScreen extends StatelessWidget {
                             color: Colors.transparent,
                             child: ListTile(
                               leading: CircleAvatar(
-                                backgroundColor: primaryCaramel.withOpacity(0.1),
-                                child: const Icon(Icons.person, color: primaryCaramel),
+                                backgroundColor: primaryCaramel.withValues(
+                                  alpha: 0.1,
+                                ),
+                                child: const Icon(
+                                  Icons.person,
+                                  color: primaryCaramel,
+                                ),
                               ),
                               title: Text(
                                 name,
@@ -191,19 +198,26 @@ class ReportsScreen extends StatelessWidget {
                               onTap: () {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text('Cliente: $name • Tel: $phone'),
+                                    content: Text(
+                                      'Cliente: $name • Tel: $phone',
+                                    ),
                                     duration: const Duration(seconds: 1),
                                   ),
                                 );
                               },
                               trailing: IconButton(
-                                icon: const Icon(Icons.phone_forwarded, color: primaryCaramel),
+                                icon: const Icon(
+                                  Icons.phone_forwarded,
+                                  color: primaryCaramel,
+                                ),
                                 tooltip: 'Ligar para Cliente',
                                 onPressed: () {
                                   // Apenas feedback visual (ou integração futura com url_launcher)
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text('Ligando para $name ($phone)...'),
+                                      content: Text(
+                                        'Ligando para $name ($phone)...',
+                                      ),
                                       duration: const Duration(seconds: 1),
                                     ),
                                   );
@@ -225,11 +239,7 @@ class ReportsScreen extends StatelessWidget {
   Widget _buildSectionTitle(String title, Color color) {
     return Text(
       title,
-      style: TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-        color: color,
-      ),
+      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color),
     );
   }
 
@@ -248,7 +258,7 @@ class ReportsScreen extends StatelessWidget {
         border: Border.all(color: Colors.grey.shade100),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),

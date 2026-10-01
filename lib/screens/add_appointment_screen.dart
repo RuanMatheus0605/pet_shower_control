@@ -34,8 +34,19 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
 
   final List<String> _petTypes = ['Cão', 'Gato', 'Outro'];
   final List<String> _petSizes = ['Pequeno', 'Médio', 'Grande'];
-  final List<String> _services = ['Banho', 'Tosa', 'Banho e Tosa', 'Hidratação', 'Outro'];
-  final List<String> _statuses = ['Aguardando', 'Em Banho', 'Pronto', 'Entregue'];
+  final List<String> _services = [
+    'Banho',
+    'Tosa',
+    'Banho e Tosa',
+    'Hidratação',
+    'Outro',
+  ];
+  final List<String> _statuses = [
+    'Aguardando',
+    'Em Banho',
+    'Pronto',
+    'Entregue',
+  ];
 
   @override
   void initState() {
@@ -48,10 +59,15 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
       _petType = _petTypes.contains(app.petType) ? app.petType : 'Cão';
       _petBreed = app.petBreed;
       _petSize = _petSizes.contains(app.petSize) ? app.petSize : 'Pequeno';
-      _serviceName = _services.contains(app.serviceName) ? app.serviceName : 'Banho';
+      _serviceName = _services.contains(app.serviceName)
+          ? app.serviceName
+          : 'Banho';
       _groomerName = app.groomerName;
       _selectedDate = app.dateTime;
-      _selectedTime = TimeOfDay(hour: app.dateTime.hour, minute: app.dateTime.minute);
+      _selectedTime = TimeOfDay(
+        hour: app.dateTime.hour,
+        minute: app.dateTime.minute,
+      );
       _price = app.price;
       _notes = app.notes;
       _status = app.status;
@@ -137,10 +153,14 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
 
   String _capitalize(String text) {
     if (text.trim().isEmpty) return '';
-    return text.trim().split(RegExp(r'\s+')).map((word) {
-      if (word.isEmpty) return '';
-      return word[0].toUpperCase() + word.substring(1).toLowerCase();
-    }).join(' ');
+    return text
+        .trim()
+        .split(RegExp(r'\s+'))
+        .map((word) {
+          if (word.isEmpty) return '';
+          return word[0].toUpperCase() + word.substring(1).toLowerCase();
+        })
+        .join(' ');
   }
 
   void _save() {
@@ -199,9 +219,11 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(widget.appointment != null
-            ? 'Agendamento atualizado com sucesso!'
-            : 'Agendamento criado com sucesso!'),
+        content: Text(
+          widget.appointment != null
+              ? 'Agendamento atualizado com sucesso!'
+              : 'Agendamento criado com sucesso!',
+        ),
         backgroundColor: const Color(0xFF059669),
       ),
     );
@@ -225,11 +247,10 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          widget.appointment != null ? 'Editar Agendamento' : 'Novo Agendamento',
-          style: const TextStyle(
-            color: darkSlate,
-            fontWeight: FontWeight.bold,
-          ),
+          widget.appointment != null
+              ? 'Editar Agendamento'
+              : 'Novo Agendamento',
+          style: const TextStyle(color: darkSlate, fontWeight: FontWeight.bold),
         ),
       ),
       body: SafeArea(
@@ -251,8 +272,12 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
                     textCapitalization: TextCapitalization.words,
                     onSaved: (val) => _clientName = val ?? '',
                     validator: (val) {
-                      if (val == null || val.trim().isEmpty) return 'Insira o nome do cliente';
-                      if (val.trim().length < 3) return 'Nome deve conter ao menos 3 caracteres';
+                      if (val == null || val.trim().isEmpty) {
+                        return 'Insira o nome do cliente';
+                      }
+                      if (val.trim().length < 3) {
+                        return 'Nome deve conter ao menos 3 caracteres';
+                      }
                       return null;
                     },
                   ),
@@ -265,9 +290,13 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
                     inputFormatters: [TelefoneInputFormatter()],
                     onSaved: (val) => _clientPhone = val ?? '',
                     validator: (val) {
-                      if (val == null || val.isEmpty) return 'Insira o telefone';
+                      if (val == null || val.isEmpty) {
+                        return 'Insira o telefone';
+                      }
                       final cleanVal = val.replaceAll(RegExp(r'\D'), '');
-                      if (cleanVal.length < 10) return 'O telefone deve ter pelo menos 10 dígitos';
+                      if (cleanVal.length < 10) {
+                        return 'O telefone deve ter pelo menos 10 dígitos';
+                      }
                       return null;
                     },
                   ),
@@ -282,8 +311,12 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
                     textCapitalization: TextCapitalization.words,
                     onSaved: (val) => _petName = val ?? '',
                     validator: (val) {
-                      if (val == null || val.trim().isEmpty) return 'Insira o nome do pet';
-                      if (val.trim().length < 2) return 'Nome deve conter ao menos 2 caracteres';
+                      if (val == null || val.trim().isEmpty) {
+                        return 'Insira o nome do pet';
+                      }
+                      if (val.trim().length < 2) {
+                        return 'Nome deve conter ao menos 2 caracteres';
+                      }
                       return null;
                     },
                   ),
@@ -317,7 +350,8 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
                     suggestions: provider.breeds,
                     icon: Icons.search,
                     onSaved: (val) => _petBreed = val ?? '',
-                    validator: (val) => val == null || val.isEmpty ? 'Insira a raça' : null,
+                    validator: (val) =>
+                        val == null || val.isEmpty ? 'Insira a raça' : null,
                   ),
                   const SizedBox(height: 20),
 
@@ -330,20 +364,30 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
                           label: 'Serviço',
                           value: _serviceName,
                           items: _services,
-                          onChanged: (val) => setState(() => _serviceName = val!),
+                          onChanged: (val) =>
+                              setState(() => _serviceName = val!),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: _buildTextField(
                           label: 'Valor (R\$)',
-                          initialValue: widget.appointment != null ? _price.toString() : '',
+                          initialValue: widget.appointment != null
+                              ? _price.toString()
+                              : '',
                           icon: Icons.monetization_on_outlined,
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                          onSaved: (val) => _price = double.tryParse(val ?? '0') ?? 0.0,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          onSaved: (val) =>
+                              _price = double.tryParse(val ?? '0') ?? 0.0,
                           validator: (val) {
-                            if (val == null || val.isEmpty) return 'Insira o valor';
-                            if (double.tryParse(val) == null) return 'Valor inválido';
+                            if (val == null || val.isEmpty) {
+                              return 'Insira o valor';
+                            }
+                            if (double.tryParse(val) == null) {
+                              return 'Valor inválido';
+                            }
                             return null;
                           },
                         ),
@@ -357,7 +401,9 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
                     suggestions: provider.groomers,
                     icon: Icons.face_outlined,
                     onSaved: (val) => _groomerName = val ?? '',
-                    validator: (val) => val == null || val.isEmpty ? 'Selecione ou insira o profissional' : null,
+                    validator: (val) => val == null || val.isEmpty
+                        ? 'Selecione ou insira o profissional'
+                        : null,
                   ),
                   const SizedBox(height: 12),
                   Row(
@@ -367,7 +413,9 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
                           onTap: _pickDate,
                           child: _buildDateTimePickerCard(
                             label: 'Data',
-                            value: DateFormat('dd/MM/yyyy').format(_selectedDate),
+                            value: DateFormat(
+                              'dd/MM/yyyy',
+                            ).format(_selectedDate),
                             icon: Icons.calendar_today,
                             primaryColor: primaryCaramel,
                           ),
@@ -422,7 +470,9 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
                         elevation: 0,
                       ),
                       child: Text(
-                        widget.appointment != null ? 'Salvar Alterações' : 'Confirmar Agendamento',
+                        widget.appointment != null
+                            ? 'Salvar Alterações'
+                            : 'Confirmar Agendamento',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -447,7 +497,7 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
       style: TextStyle(
         fontSize: 16,
         fontWeight: FontWeight.bold,
-        color: color.withOpacity(0.8),
+        color: color.withValues(alpha: 0.8),
       ),
     );
   }
@@ -500,12 +550,9 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
     required ValueChanged<String?> onChanged,
   }) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       items: items.map((item) {
-        return DropdownMenuItem<String>(
-          value: item,
-          child: Text(item),
-        );
+        return DropdownMenuItem<String>(value: item, child: Text(item));
       }).toList(),
       onChanged: onChanged,
       decoration: InputDecoration(
@@ -543,70 +590,83 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
           return suggestions;
         }
         return suggestions.where((String option) {
-          return option.toLowerCase().contains(textEditingValue.text.toLowerCase());
+          return option.toLowerCase().contains(
+            textEditingValue.text.toLowerCase(),
+          );
         });
       },
-      fieldViewBuilder: (BuildContext context, TextEditingController textEditingController,
-          FocusNode focusNode, VoidCallback onFieldSubmitted) {
-        return TextFormField(
-          controller: textEditingController,
-          focusNode: focusNode,
-          onSaved: onSaved,
-          validator: validator,
-          textCapitalization: TextCapitalization.words,
-          autovalidateMode: AutovalidateMode.onUserInteraction,
-          decoration: InputDecoration(
-            labelText: label,
-            prefixIcon: Icon(icon, color: const Color(0xFFD4A373)),
-            filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: Colors.grey.shade200),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: Colors.grey.shade100),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: Color(0xFFD4A373)),
-            ),
-          ),
-        );
-      },
-      optionsViewBuilder: (BuildContext context, AutocompleteOnSelected<String> onSelected,
-          Iterable<String> options) {
-        return Align(
-          alignment: Alignment.topLeft,
-          child: Material(
-            elevation: 4.0,
-            borderRadius: BorderRadius.circular(16),
-            child: Container(
-              width: MediaQuery.of(context).size.width - 32,
-              constraints: const BoxConstraints(maxHeight: 200),
-              decoration: BoxDecoration(
+      fieldViewBuilder:
+          (
+            BuildContext context,
+            TextEditingController textEditingController,
+            FocusNode focusNode,
+            VoidCallback onFieldSubmitted,
+          ) {
+            return TextFormField(
+              controller: textEditingController,
+              focusNode: focusNode,
+              onSaved: onSaved,
+              validator: validator,
+              textCapitalization: TextCapitalization.words,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              decoration: InputDecoration(
+                labelText: label,
+                prefixIcon: Icon(icon, color: const Color(0xFFD4A373)),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: Colors.grey.shade200),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: Colors.grey.shade100),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: const BorderSide(color: Color(0xFFD4A373)),
+                ),
+              ),
+            );
+          },
+      optionsViewBuilder:
+          (
+            BuildContext context,
+            AutocompleteOnSelected<String> onSelected,
+            Iterable<String> options,
+          ) {
+            return Align(
+              alignment: Alignment.topLeft,
+              child: Material(
+                elevation: 4.0,
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 200),
+                  child: SizedBox(
+                    width: MediaQuery.of(context).size.width - 32,
+                    child: ListView.builder(
+                      padding: EdgeInsets.zero,
+                      shrinkWrap: true,
+                      itemCount: options.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        final String option = options.elementAt(index);
+                        return Material(
+                          color: Colors.transparent,
+                          child: ListTile(
+                            title: Text(option),
+                            onTap: () {
+                              onSelected(option);
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
               ),
-              child: ListView.builder(
-                padding: EdgeInsets.zero,
-                shrinkWrap: true,
-                itemCount: options.length,
-                itemBuilder: (BuildContext context, int index) {
-                  final String option = options.elementAt(index);
-                  return ListTile(
-                    title: Text(option),
-                    onTap: () {
-                      onSelected(option);
-                    },
-                  );
-                },
-              ),
-            ),
-          ),
-        );
-      },
+            );
+          },
     );
   }
 
@@ -648,7 +708,7 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
                 ),
               ),
             ],
-          )
+          ),
         ],
       ),
     );
@@ -658,7 +718,9 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
 class TelefoneInputFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
-      TextEditingValue oldValue, TextEditingValue newValue) {
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
     final text = newValue.text.replaceAll(RegExp(r'\D'), '');
     if (text.length > 11) {
       return oldValue;
@@ -683,4 +745,3 @@ class TelefoneInputFormatter extends TextInputFormatter {
     );
   }
 }
-

@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../models/appointment_model.dart';
 import '../providers/appointment_provider.dart';
+import '../services/auth_service.dart';
 import 'add_appointment_screen.dart';
 import 'reports_screen.dart';
 
@@ -37,10 +38,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // Calcular métricas do dia
     final totalCount = dailyAppointments.length;
-    final waitingCount = dailyAppointments.where((a) => a.status == 'Aguardando').length;
-    final inProgressCount = dailyAppointments.where((a) => a.status == 'Em Banho').length;
-    final doneCount = dailyAppointments.where((a) => a.status == 'Pronto').length;
-    final deliveredCount = dailyAppointments.where((a) => a.status == 'Entregue').length;
+    final waitingCount = dailyAppointments
+        .where((a) => a.status == 'Aguardando')
+        .length;
+    final inProgressCount = dailyAppointments
+        .where((a) => a.status == 'Em Banho')
+        .length;
+    final doneCount = dailyAppointments
+        .where((a) => a.status == 'Pronto')
+        .length;
+    final deliveredCount = dailyAppointments
+        .where((a) => a.status == 'Entregue')
+        .length;
 
     // Cores de tema
     const pastelYellow = Color(0xFFFEFBE9);
@@ -68,13 +77,24 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.analytics_outlined, color: darkSlate, size: 28),
+            icon: const Icon(
+              Icons.analytics_outlined,
+              color: darkSlate,
+              size: 28,
+            ),
             tooltip: 'Relatórios e Finanças',
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const ReportsScreen()),
               );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout, color: darkSlate, size: 24),
+            tooltip: 'Logout',
+            onPressed: () async {
+              await AuthService().signOut();
             },
           ),
           const SizedBox(width: 8),
@@ -114,17 +134,28 @@ class _HomeScreenState extends State<HomeScreen> {
             // Lista de Agendamentos do Dia
             Expanded(
               child: provider.isLoading
-                  ? const Center(child: CircularProgressIndicator(color: primaryCaramel))
+                  ? const Center(
+                      child: CircularProgressIndicator(color: primaryCaramel),
+                    )
                   : filteredAppointments.isEmpty
-                      ? _buildEmptyState(darkSlate)
-                      : ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                          itemCount: filteredAppointments.length,
-                          itemBuilder: (context, index) {
-                            final appointment = filteredAppointments[index];
-                            return _buildAppointmentCard(context, provider, appointment, darkSlate, primaryCaramel);
-                          },
-                        ),
+                  ? _buildEmptyState(darkSlate)
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                        vertical: 8.0,
+                      ),
+                      itemCount: filteredAppointments.length,
+                      itemBuilder: (context, index) {
+                        final appointment = filteredAppointments[index];
+                        return _buildAppointmentCard(
+                          context,
+                          provider,
+                          appointment,
+                          darkSlate,
+                          primaryCaramel,
+                        );
+                      },
+                    ),
             ),
           ],
         ),
@@ -149,9 +180,16 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // Widget para seletor de data horizontal (Últimos 3 dias e próximos 7 dias)
-  Widget _buildDatePicker(Color background, Color primaryColor, Color textColor) {
+  Widget _buildDatePicker(
+    Color background,
+    Color primaryColor,
+    Color textColor,
+  ) {
     final today = DateTime.now();
-    final dates = List.generate(11, (index) => today.add(Duration(days: index - 3)));
+    final dates = List.generate(
+      11,
+      (index) => today.add(Duration(days: index - 3)),
+    );
 
     return Container(
       height: 95,
@@ -163,7 +201,10 @@ class _HomeScreenState extends State<HomeScreen> {
         itemBuilder: (context, index) {
           final date = dates[index];
           final isSelected = DateUtils.isSameDay(date, _selectedDate);
-          final dayName = DateFormat('EEE', 'pt_BR').format(date).toUpperCase().replaceAll('.', '');
+          final dayName = DateFormat(
+            'EEE',
+            'pt_BR',
+          ).format(date).toUpperCase().replaceAll('.', '');
           final dayNum = DateFormat('dd').format(date);
           final isToday = DateUtils.isSameDay(date, today);
 
@@ -178,16 +219,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 border: Border.all(
                   color: isSelected
                       ? primaryColor
-                      : (isToday ? primaryColor.withOpacity(0.5) : Colors.grey.shade200),
+                      : (isToday
+                            ? primaryColor.withValues(alpha: 0.5)
+                            : Colors.grey.shade200),
                   width: isToday ? 2 : 1,
                 ),
                 boxShadow: isSelected
                     ? [
                         BoxShadow(
-                          color: primaryColor.withOpacity(0.3),
+                          color: primaryColor.withValues(alpha: 0.3),
                           blurRadius: 6,
                           offset: const Offset(0, 3),
-                        )
+                        ),
                       ]
                     : null,
               ),
@@ -207,8 +250,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         dayName,
                         style: TextStyle(
                           fontSize: 12,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                          color: isSelected ? Colors.white : Colors.grey.shade600,
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.w500,
+                          color: isSelected
+                              ? Colors.white
+                              : Colors.grey.shade600,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -247,8 +294,16 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         children: [
           _buildMetricCard('Total', totalCount.toString(), Colors.blueGrey),
-          _buildMetricCard('Aguardando', waiting.toString(), const Color(0xFFD97706)),
-          _buildMetricCard('Em Banho', inProgress.toString(), const Color(0xFF3B82F6)),
+          _buildMetricCard(
+            'Aguardando',
+            waiting.toString(),
+            const Color(0xFFD97706),
+          ),
+          _buildMetricCard(
+            'Em Banho',
+            inProgress.toString(),
+            const Color(0xFF3B82F6),
+          ),
           _buildMetricCard('Pronto', done.toString(), const Color(0xFF10B981)),
           _buildMetricCard('Entregue', delivered.toString(), Colors.grey),
         ],
@@ -294,7 +349,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Filtros de status em horizontal chip
   Widget _buildStatusFilters(Color darkSlate, Color primaryCaramel) {
-    final statusList = ['Todos', 'Aguardando', 'Em Banho', 'Pronto', 'Entregue'];
+    final statusList = [
+      'Todos',
+      'Aguardando',
+      'Em Banho',
+      'Pronto',
+      'Entregue',
+    ];
 
     return Container(
       height: 48,
@@ -318,7 +379,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   });
                 }
               },
-              selectedColor: primaryCaramel.withOpacity(0.2),
+              selectedColor: primaryCaramel.withValues(alpha: 0.2),
               checkmarkColor: primaryCaramel,
               labelStyle: TextStyle(
                 color: isSelected ? primaryCaramel : darkSlate,
@@ -346,7 +407,11 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.calendar_today_outlined, size: 64, color: Colors.grey.shade400),
+            Icon(
+              Icons.calendar_today_outlined,
+              size: 64,
+              color: Colors.grey.shade400,
+            ),
             const SizedBox(height: 16),
             Text(
               'Nenhum agendamento',
@@ -360,9 +425,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Text(
               'Não há sessões registradas para o dia ${DateFormat('dd/MM/yyyy').format(_selectedDate)} com os filtros selecionados.',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(color: Colors.grey.shade600),
             ),
           ],
         ),
@@ -407,7 +470,9 @@ class _HomeScreenState extends State<HomeScreen> {
         break;
     }
 
-    final petIcon = appointment.petType.toLowerCase() == 'gato' ? Icons.pets : Icons.pets;
+    final petIcon = appointment.petType.toLowerCase() == 'gato'
+        ? Icons.pets
+        : Icons.pets;
     final timeStr = DateFormat('HH:mm').format(appointment.dateTime);
 
     return Card(
@@ -438,207 +503,226 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Linha Superior: Pet Name, Tipo e Status Badge
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: primaryCaramel.withOpacity(0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          petIcon,
-                          color: primaryCaramel,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            appointment.petName,
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: darkSlate,
-                            ),
-                          ),
-                          Text(
-                            '${appointment.petBreed} • ${appointment.petSize}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: statusBgColor,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Linha Superior: Pet Name, Tipo e Status Badge
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
                       children: [
-                        Icon(statusIcon, color: statusTextColor, size: 14),
-                        const SizedBox(width: 4),
-                        Text(
-                          appointment.status,
-                          style: TextStyle(
-                            color: statusTextColor,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: primaryCaramel.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
                           ),
+                          child: Icon(petIcon, color: primaryCaramel, size: 20),
+                        ),
+                        const SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              appointment.petName,
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: darkSlate,
+                              ),
+                            ),
+                            Text(
+                              '${appointment.petBreed} • ${appointment.petSize}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade500,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ),
-                ],
-              ),
-              const Divider(height: 24, thickness: 0.5),
-
-              // Detalhes do agendamento (Horário, Serviço, Groomer e Valor)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.schedule, size: 14, color: Colors.grey),
-                          const SizedBox(width: 6),
-                          Text(
-                            timeStr,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: darkSlate,
-                            ),
-                          ),
-                        ],
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
                       ),
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          const Icon(Icons.cut_outlined, size: 14, color: Colors.grey),
-                          const SizedBox(width: 6),
-                          Text(
-                            appointment.serviceName,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: darkSlate,
-                            ),
-                          ),
-                        ],
+                      decoration: BoxDecoration(
+                        color: statusBgColor,
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                    ],
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+                      child: Row(
                         children: [
-                          const Icon(Icons.person_outline, size: 14, color: Colors.grey),
-                          const SizedBox(width: 6),
+                          Icon(statusIcon, color: statusTextColor, size: 14),
+                          const SizedBox(width: 4),
                           Text(
-                            appointment.groomerName,
+                            appointment.status,
                             style: TextStyle(
-                              fontSize: 14,
-                              color: darkSlate,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          const Icon(Icons.attach_money, size: 14, color: Colors.grey),
-                          const SizedBox(width: 6),
-                          Text(
-                            'R\$ ${appointment.price.toStringAsFixed(2)}',
-                            style: TextStyle(
-                              fontSize: 14,
+                              color: statusTextColor,
+                              fontSize: 12,
                               fontWeight: FontWeight.bold,
-                              color: darkSlate,
                             ),
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                  ],
+                ),
+                const Divider(height: 24, thickness: 0.5),
 
-              const SizedBox(height: 12),
-              // Tutor info
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
+                // Detalhes do agendamento (Horário, Serviço, Groomer e Valor)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.schedule,
+                              size: 14,
+                              color: Colors.grey,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              timeStr,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: darkSlate,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.cut_outlined,
+                              size: 14,
+                              color: Colors.grey,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              appointment.serviceName,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: darkSlate,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.person_outline,
+                              size: 14,
+                              color: Colors.grey,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              appointment.groomerName,
+                              style: TextStyle(fontSize: 14, color: darkSlate),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.attach_money,
+                              size: 14,
+                              color: Colors.grey,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'R\$ ${appointment.price.toStringAsFixed(2)}',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: darkSlate,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 12),
+                // Tutor info
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Tutor: ${appointment.clientName} (${appointment.clientPhone})',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey.shade600,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                if (appointment.notes.trim().isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     child: Text(
-                      'Tutor: ${appointment.clientName} (${appointment.clientPhone})',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      'Obs: ${appointment.notes}',
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 12,
                         color: Colors.grey.shade600,
-                        fontStyle: FontStyle.italic,
                       ),
                     ),
                   ),
                 ],
-              ),
 
-              if (appointment.notes.trim().isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    'Obs: ${appointment.notes}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
+                const SizedBox(height: 12),
+                // Ações Rápidas de Alteração de Status
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text(
+                      'Atualizar status:',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade500,
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    _buildStatusTransitionButtons(
+                      provider,
+                      appointment,
+                      primaryCaramel,
+                    ),
+                  ],
                 ),
               ],
-
-              const SizedBox(height: 12),
-              // Ações Rápidas de Alteração de Status
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text(
-                    'Atualizar status:',
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
-                  ),
-                  const SizedBox(width: 8),
-                  _buildStatusTransitionButtons(provider, appointment, primaryCaramel),
-                ],
-              ),
-            ],
+            ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   // Botões rápidos de mudança de status
   Widget _buildStatusTransitionButtons(
@@ -708,7 +792,9 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Excluir Agendamento'),
-        content: Text('Tem certeza que deseja excluir o agendamento de ${appointment.petName}?'),
+        content: Text(
+          'Tem certeza que deseja excluir o agendamento de ${appointment.petName}?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -720,7 +806,9 @@ class _HomeScreenState extends State<HomeScreen> {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Agendamento de ${appointment.petName} excluído.'),
+                  content: Text(
+                    'Agendamento de ${appointment.petName} excluído.',
+                  ),
                   backgroundColor: Colors.redAccent,
                 ),
               );
