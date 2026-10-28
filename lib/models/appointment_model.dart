@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class Appointment {
   final String id;
   final String clientName;
@@ -61,9 +63,8 @@ class Appointment {
     );
   }
 
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toFirestore() {
     return {
-      'id': id,
       'clientName': clientName,
       'clientPhone': clientPhone,
       'petName': petName,
@@ -72,28 +73,28 @@ class Appointment {
       'petSize': petSize,
       'serviceName': serviceName,
       'groomerName': groomerName,
-      'dateTime': dateTime.toIso8601String(),
+      'dateTime': Timestamp.fromDate(dateTime),
       'status': status,
       'price': price,
       'notes': notes,
     };
   }
 
-  factory Appointment.fromJson(Map<String, dynamic> json) {
+  factory Appointment.fromFirestore(String id, Map<String, dynamic> data) {
     return Appointment(
-      id: json['id'] as String,
-      clientName: json['clientName'] as String,
-      clientPhone: json['clientPhone'] as String,
-      petName: json['petName'] as String,
-      petType: json['petType'] as String,
-      petBreed: json['petBreed'] as String,
-      petSize: json['petSize'] as String,
-      serviceName: json['serviceName'] as String,
-      groomerName: json['groomerName'] as String,
-      dateTime: DateTime.parse(json['dateTime'] as String),
-      status: json['status'] as String,
-      price: (json['price'] as num).toDouble(),
-      notes: json['notes'] as String,
+      id: id,
+      clientName: data['clientName'] as String,
+      clientPhone: data['clientPhone'] as String,
+      petName: data['petName'] as String,
+      petType: data['petType'] as String,
+      petBreed: data['petBreed'] as String,
+      petSize: data['petSize'] as String,
+      serviceName: data['serviceName'] as String,
+      groomerName: data['groomerName'] as String,
+      dateTime: (data['dateTime'] as Timestamp).toDate(),
+      status: data['status'] as String,
+      price: (data['price'] as num).toDouble(),
+      notes: data['notes'] as String,
     );
   }
 }

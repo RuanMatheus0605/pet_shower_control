@@ -137,8 +137,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   ? const Center(
                       child: CircularProgressIndicator(color: primaryCaramel),
                     )
+                  : provider.errorMessage != null
+                  ? _buildErrorState(provider)
                   : filteredAppointments.isEmpty
-                  ? _buildEmptyState(darkSlate)
+                  ? _buildEmptyState(
+                      darkSlate,
+                      hasAppointments: allAppointments.isNotEmpty,
+                    )
                   : ListView.builder(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16.0,
@@ -400,7 +405,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // Estado vazio
-  Widget _buildEmptyState(Color darkSlate) {
+  Widget _buildEmptyState(Color darkSlate, {required bool hasAppointments}) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32.0),
@@ -414,7 +419,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Nenhum agendamento',
+              hasAppointments ? 'Nenhum agendamento' : 'Sua agenda está vazia',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -423,9 +428,53 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Não há sessões registradas para o dia ${DateFormat('dd/MM/yyyy').format(_selectedDate)} com os filtros selecionados.',
+              hasAppointments
+                  ? 'Não há sessões registradas para o dia ${DateFormat('dd/MM/yyyy').format(_selectedDate)} com os filtros selecionados.'
+                  : 'Cadastre o primeiro agendamento para começar a organizar os atendimentos.',
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.grey.shade600),
+            ),
+            if (!hasAppointments) ...[
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          AddAppointmentScreen(initialDate: _selectedDate),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.add),
+                label: const Text('Cadastrar primeiro agendamento'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFFD4A373),
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState(AppointmentProvider provider) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.cloud_off, size: 48, color: Colors.redAccent),
+            const SizedBox(height: 12),
+            Text(provider.errorMessage!, textAlign: TextAlign.center),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: provider.retry,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Tentar novamente'),
             ),
           ],
         ),
@@ -710,6 +759,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(width: 8),
                     _buildStatusTransitionButtons(
+                      context,
                       provider,
                       appointment,
                       primaryCaramel,
@@ -726,13 +776,22 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Botões rápidos de mudança de status
   Widget _buildStatusTransitionButtons(
+    BuildContext context,
     AppointmentProvider provider,
     Appointment appointment,
     Color primaryColor,
   ) {
+    if (provider.isUpdating(appointment.id)) {
+      return const SizedBox(
+        width: 24,
+        height: 24,
+        child: CircularProgressIndicator(strokeWidth: 2),
+      );
+    }
     if (appointment.status == 'Aguardando') {
       return TextButton.icon(
-        onPressed: () => provider.updateStatus(appointment.id, 'Em Banho'),
+        onPressed: () =>
+            _updateStatus(context, provider, appointment.id, 'Em Banho'),
         icon: const Icon(Icons.play_arrow, size: 16),
         label: const Text('Iniciar Banho'),
         style: TextButton.styleFrom(
@@ -744,7 +803,8 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     } else if (appointment.status == 'Em Banho') {
       return TextButton.icon(
-        onPressed: () => provider.updateStatus(appointment.id, 'Pronto'),
+        onPressed: () =>
+            _updateStatus(context, provider, appointment.id, 'Pronto'),
         icon: const Icon(Icons.check, size: 16),
         label: const Text('Finalizar'),
         style: TextButton.styleFrom(
@@ -756,7 +816,8 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     } else if (appointment.status == 'Pronto') {
       return TextButton.icon(
-        onPressed: () => provider.updateStatus(appointment.id, 'Entregue'),
+        onPressed: () =>
+            _updateStatus(context, provider, appointment.id, 'Entregue'),
         icon: const Icon(Icons.card_giftcard, size: 16),
         label: const Text('Entregar ao Tutor'),
         style: TextButton.styleFrom(
@@ -769,7 +830,8 @@ class _HomeScreenState extends State<HomeScreen> {
     } else {
       // Já está entregue, sem ação rápida necessária além de poder reabrir se necessário
       return TextButton.icon(
-        onPressed: () => provider.updateStatus(appointment.id, 'Aguardando'),
+        onPressed: () =>
+            _updateStatus(context, provider, appointment.id, 'Aguardando'),
         icon: const Icon(Icons.refresh, size: 16),
         label: const Text('Reabrir'),
         style: TextButton.styleFrom(
@@ -782,42 +844,100 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _updateStatus(
+    BuildContext context,
+    AppointmentProvider provider,
+    String id,
+    String status,
+  ) async {
+    try {
+      await provider.updateStatus(id, status);
+    } catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(provider.userFriendlyError(error)),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
+  }
+
   // Confirmação para excluir
   void _showDeleteConfirmation(
     BuildContext context,
     AppointmentProvider provider,
     Appointment appointment,
   ) {
-    showDialog(
+    showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Excluir Agendamento'),
-        content: Text(
-          'Tem certeza que deseja excluir o agendamento de ${appointment.petName}?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              provider.deleteAppointment(appointment.id);
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Agendamento de ${appointment.petName} excluído.',
-                  ),
+      builder: (dialogContext) {
+        var isDeleting = false;
+        return StatefulBuilder(
+          builder: (context, setDialogState) => AlertDialog(
+            title: const Text('Excluir Agendamento'),
+            content: Text(
+              'Tem certeza que deseja excluir o agendamento de ${appointment.petName}?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: isDeleting
+                    ? null
+                    : () => Navigator.pop(dialogContext),
+                child: const Text('Cancelar'),
+              ),
+              ElevatedButton(
+                onPressed: isDeleting
+                    ? null
+                    : () async {
+                        setDialogState(() => isDeleting = true);
+                        try {
+                          await provider.deleteAppointment(appointment.id);
+                          if (!dialogContext.mounted) return;
+                          Navigator.pop(dialogContext);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Agendamento de ${appointment.petName} excluído.',
+                              ),
+                              backgroundColor: Colors.redAccent,
+                            ),
+                          );
+                        } catch (error) {
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(provider.userFriendlyError(error)),
+                              backgroundColor: Colors.redAccent,
+                            ),
+                          );
+                        } finally {
+                          if (dialogContext.mounted) {
+                            setDialogState(() => isDeleting = false);
+                          }
+                        }
+                      },
+                style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.redAccent,
                 ),
-              );
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-            child: const Text('Excluir', style: TextStyle(color: Colors.white)),
+                child: isDeleting
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text(
+                        'Excluir',
+                        style: TextStyle(color: Colors.white),
+                      ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

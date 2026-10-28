@@ -1,64 +1,48 @@
 # Pet Shower Control
 
-Aplicativo multiplataforma para controle de agendamentos de banho e outros
-serviços em um petshop. O sistema centraliza a agenda do dia, os dados dos
-tutores e dos pets, o acompanhamento do atendimento e o resumo financeiro da
-rotina do estabelecimento.
+Aplicativo Flutter para organizar agendamentos de banho, tosa e outros
+serviços de um pet shop. Os dados são sincronizados com o Cloud Firestore e
+cada conta autenticada mantém sua própria agenda.
 
-## Objetivo do aplicativo
+## Objetivo e tema
 
-Facilitar a organização da rotina do petshop, permitindo cadastrar e consultar
-agendamentos com agilidade, acompanhar o status de cada atendimento e manter a
-visão geral da operação em um único local.
+Centralizar a agenda, os dados dos tutores e dos pets, o acompanhamento dos
+atendimentos e um resumo financeiro da rotina do estabelecimento.
 
-## Tema e domínio
+## Funcionalidades dos trabalhos
 
-O projeto pertence ao domínio de gestão de serviços para animais de estimação,
-com foco em banho, tosa e cuidados de higiene em petshops. O público principal
-são os profissionais responsáveis pela recepção, organização da agenda e
-execução dos atendimentos.
+### Trabalho 1 — Gestão de agendamentos
 
-## Funcionalidades implementadas do Trabalho 1
+- Cadastro e consulta de agendamentos com dados do tutor, pet, serviço,
+  profissional, data, horário, preço e observações.
+- Edição e exclusão com confirmação.
+- Atualização de status: `Aguardando`, `Em Banho`, `Pronto` e `Entregue`.
+- Agenda diária, filtros por status e métricas de atendimentos.
+- Relatório financeiro, distribuição de serviços e diretório de clientes.
 
-- Cadastro de agendamentos com dados do tutor, telefone, pet, espécie, raça e porte.
-- Seleção de serviço, profissional, data, horário, preço e observações.
-- Edição e exclusão de agendamentos.
-- Alteração do status do atendimento: `Aguardando`, `Em Banho`, `Pronto` e `Entregue`.
-- Visualização da agenda por data, com navegação entre dias próximos.
-- Filtro dos agendamentos por status.
-- Métricas diárias de atendimentos aguardando, em banho, prontos e entregues.
-- Ordenação automática dos agendamentos por data e horário.
-- Persistência local dos dados em arquivo JSON no diretório de documentos do dispositivo.
-- Relatório com faturamento realizado, pendente e total histórico.
-- Distribuição dos serviços cadastrados e diretório de clientes.
-- Validação de campos obrigatórios e formatação de nomes e telefone.
+### Trabalho 2 — Autenticação
 
-## Nova seção: autenticação com Firebase
+- Cadastro, login e recuperação de senha por e-mail com Firebase Authentication.
+- Verificação da sessão ao iniciar o app e proteção da área interna.
+- Logout e mensagens amigáveis para erros comuns de autenticação.
 
-Foi adicionada a camada de autenticação do Trabalho 2 utilizando Firebase Authentication.
+### Trabalho 3 — Persistência e isolamento no Firestore
 
-### Funcionalidades implementadas
+- CRUD de agendamentos persistidos no Cloud Firestore.
+- Atualização em tempo real da lista por `snapshots()`.
+- Dados armazenados por usuário autenticado, usando o UID da sessão.
+- Estados de carregamento, lista vazia, erro de leitura e falhas de gravação.
+- Regras de segurança com validação de proprietário, campos e tipos.
 
-- Cadastro de usuário com e-mail e senha.
-- Login com e-mail e senha.
-- Recuperação de senha por e-mail.
-- Logout da sessão atual.
-- Verificação automática do estado de autenticação ao abrir o app.
-- Proteção das telas internas para usuários não autenticados.
-- Mensagens amigáveis para erros comuns de autenticação.
+## Tecnologias e dependências
 
-## Tecnologias utilizadas
+- Flutter e Dart.
+- Firebase Core e Firebase Authentication.
+- Cloud Firestore.
+- Provider para gerenciamento de estado.
+- Material 3 e `intl` para interface e formatação em português.
 
-- **Flutter + Dart**: desenvolvimento da aplicação multiplataforma.
-- **Firebase Core**: inicialização do projeto Firebase.
-- **Firebase Authentication**: autenticação por e-mail e senha.
-- **Material 3**: interface visual da aplicação.
-- **Provider**: gerenciamento do estado dos agendamentos.
-- **path_provider**: acesso ao diretório local do dispositivo.
-- **JSON**: persistência local dos dados.
-- **intl**: formatação de datas e localização em português do Brasil.
-
-## Estrutura resumida do projeto
+## Organização do código
 
 ```text
 lib/
@@ -76,113 +60,218 @@ lib/
 │   ├── home_screen.dart
 │   ├── add_appointment_screen.dart
 │   └── reports_screen.dart
-├── services/
-│   ├── auth_service.dart
-│   └── storage_service.dart
-└──
+└── services/
+    ├── auth_service.dart
+    └── appointment_repository.dart
 ```
 
-## Como executar/configurar o projeto
+## Estrutura do Firestore
+
+Cada agendamento fica na subcoleção do usuário autenticado:
+
+```text
+users/{uid}/appointments/{appointmentId}
+```
+
+Os documentos contêm `ownerUid`, os dados do tutor e do pet, serviço,
+profissional, `dateTime`, `status`, `price`, `notes`, `createdAt` e
+`updatedAt`. O UID não é solicitado em nenhum formulário: o repositório obtém
+essa identidade da sessão autenticada.
+
+## Configuração e execução
 
 ### Pré-requisitos
 
-- Flutter SDK compatível com Dart `3.12.0` ou superior.
-- Firebase configurado no projeto.
-- Dispositivo, emulador Android ou navegador com suporte ao Flutter.
-- Provedor `Email/Password` habilitado no Firebase Console.
+- Flutter SDK compatível com a versão do Dart indicada em `pubspec.yaml`.
+- Projeto Firebase com os aplicativos/plataformas configurados.
+- Firebase Authentication com o provedor `Email/Password` habilitado.
+- Cloud Firestore criado no projeto Firebase.
 
 ### Passos
 
-1. Clone ou abra este repositório.
-2. Instale as dependências:
+1. Configure o projeto Firebase e os arquivos/opções de plataforma. O projeto
+   já inclui `lib/firebase_options.dart` e a configuração Android.
+2. No Firebase Console, habilite **Authentication → Email/Password**.
+3. Crie o banco de dados **Cloud Firestore**.
+4. Na raiz do repositório, publique as regras incluídas:
 
-```bash
-flutter pub get
+   ```bash
+   firebase deploy --only firestore:rules
+   ```
+
+   O `firebase.json` aponta para `firestore.rules`. Não use regras abertas;
+   a aplicação depende das regras por UID descritas abaixo.
+5. Instale as dependências e execute:
+
+   ```bash
+   flutter pub get
+   flutter run
+   ```
+
+6. Valide o projeto com:
+
+   ```bash
+   flutter analyze
+   flutter test
+   ```
+
+## Segurança e isolamento
+
+O arquivo `firestore.rules` concede leitura e gravação somente quando a sessão
+está autenticada e `request.auth.uid` corresponde ao `{userId}` do caminho.
+As regras validam os campos permitidos, os tipos dos valores, o proprietário e
+os status conhecidos. Atualizações preservam `createdAt`; exclusões verificam
+o proprietário do documento. Caminhos fora da subcoleção autorizada são
+negados por padrão.
+
+### Relato dos testes com duas contas
+
+Os testes manuais foram realizados e validados com duas contas autenticadas
+distintas:
+
+- **Conta A:** cadastrou agendamentos na própria coleção e confirmou que eles
+  aparecem na lista.
+- **Conta B:** acessou a própria agenda e visualizou somente os documentos
+  associados ao seu UID.
+- **Isolamento:** a conta B não conseguiu ler, editar ou excluir documentos da
+  conta A. As operações de acesso cruzado foram negadas pelas Firestore
+  Security Rules; os dados da conta A permaneceram isolados.
+
+### Transcrição das Firestore Security Rules publicadas
+
+Estas são as regras publicadas no projeto Firebase e mantidas em
+[`firestore.rules`](firestore.rules):
+
+```text
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    function validAppointment(data, userId) {
+      return data.keys().hasAll([
+          'ownerUid',
+          'clientName',
+          'clientPhone',
+          'petName',
+          'petType',
+          'petBreed',
+          'petSize',
+          'serviceName',
+          'groomerName',
+          'dateTime',
+          'status',
+          'price',
+          'notes',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'ownerUid',
+          'clientName',
+          'clientPhone',
+          'petName',
+          'petType',
+          'petBreed',
+          'petSize',
+          'serviceName',
+          'groomerName',
+          'dateTime',
+          'status',
+          'price',
+          'notes',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        data.ownerUid == userId &&
+        data.clientName is string &&
+        data.clientName.size() > 0 &&
+        data.clientName.size() <= 120 &&
+        data.clientPhone is string &&
+        data.petName is string &&
+        data.petName.size() > 0 &&
+        data.petName.size() <= 120 &&
+        data.petType is string &&
+        data.petBreed is string &&
+        data.petSize is string &&
+        data.serviceName is string &&
+        data.groomerName is string &&
+        data.dateTime is timestamp &&
+        data.status in ['Aguardando', 'Em Banho', 'Pronto', 'Entregue'] &&
+        data.price is number &&
+        data.price >= 0 &&
+        data.notes is string &&
+        data.notes.size() <= 2000 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    match /users/{userId}/appointments/{appointmentId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) &&
+        validAppointment(request.resource.data, userId);
+      allow update: if isOwner(userId) &&
+        validAppointment(request.resource.data, userId) &&
+        request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isOwner(userId) &&
+        resource.data.ownerUid == userId;
+    }
+  }
+}
 ```
 
-3. Verifique os dispositivos disponíveis:
+## Screenshots e evidências do CRUD
 
-```bash
-flutter devices
-```
+As capturas abaixo mostram o cadastro, a lista atualizada após a leitura,
+a edição, a confirmação e o resultado da exclusão, além do estado sem
+agendamentos para a data selecionada.
 
-4. Configure o projeto Firebase no console e confirme que o arquivo `lib/firebase_options.dart` esteja presente.
-5. Habilite o provedor de autenticação:
-   - Acesse o Firebase Console;
-   - Abra o projeto;
-   - Vá em `Authentication`;
-   - Selecione `Sign-in method`;
-   - Ative `Email/Password`.
-6. Execute a aplicação:
+### CREATE — agendamento cadastrado
 
-```bash
-flutter run
-```
+![Agendamento após o cadastro](screenshots/crud-create.jpeg)
 
-### Verificação adicional
+### READ — agendamento exibido na lista
 
-```bash
-flutter analyze
-```
+![Agendamento na lista](screenshots/crud-read.jpeg)
 
-## Fluxo de autenticação
+### UPDATE — dados do agendamento atualizados
 
-- Usuário autenticado: acesso direto à área interna do Trabalho 1.
-- Usuário não autenticado: visualiza a tela de login.
-- Login inválido: mensagem amigável sem expor detalhes do Firebase.
-- Cadastro com e-mail já existente: mensagem amigável e tratada no app.
-- Recuperação de senha: envio de instruções sem revelar se a conta existe.
-- Logout: encerra a sessão e retorna ao fluxo de autenticação.
+![Agendamento atualizado](screenshots/crud-update.jpeg)
 
-## Screenshots
+### DELETE — confirmação
 
-Os screenshots abaixo representam as telas principais do app e devem ser
-adicionados conforme disponibilizados na execução do projeto.
+![Diálogo de confirmação da exclusão](screenshots/crud-delete-confirm.jpeg)
 
-### Tela inicial
+### DELETE — agendamento removido da lista
+
+![Lista após a exclusão](screenshots/crud-delete-result.jpeg)
+
+### Estado vazio
+
+![Agenda sem agendamentos na data selecionada](screenshots/estado-vazio.jpeg)
+
+As capturas comprovam os estados visuais mostrados. Para demonstrar também a
+persistência após reabrir o aplicativo e o isolamento entre contas, execute os
+testes com duas contas no projeto Firebase configurado para a entrega.
+
+### Screenshots dos trabalhos anteriores
 
 ![Tela inicial](screenshots/tela-inicial.jpeg)
-
-### Tela de login
-
 ![Tela de login](screenshots/tela-login.jpeg)
-
-### Tela de criar conta
-
 ![Tela de criar conta](screenshots/tela-criarconta.jpeg)
-
-### Tela de redefinir senha
-
 ![Tela de redefinir senha](screenshots/tela-redefinirsenha.jpeg)
-
-### Configuração do Firebase Console
-
-![Configuração do Firebase Console](screenshots/config-firebaseconsole.jpeg)
-
-### Resumo financeiro
-
+![Cadastro de agendamento](screenshots/tela-de-cadastro.jpeg)
 ![Resumo financeiro](screenshots/resumo-financeiro.jpeg)
+![Modal de exclusão](screenshots/modal-exclusao.jpeg)
+![Configuração do Firebase](screenshots/config-firebaseconsole.jpeg)
 
-### Modal de exclusão
+## Próximas evoluções — Trabalho 4
 
-![Modal de exclusao](screenshots/modal-exclusao.jpeg)
-
-## Próximas evoluções previstas para o Trabalho 3
-
-- Integração com banco de dados em nuvem ou Firebase Firestore.
-- Sincronização dos agendamentos entre dispositivos e usuários autenticados.
-- Controle de acesso por perfis e permissões de usuários.
-- Notificações e lembretes para clientes e equipe.
+- Perfis e permissões para diferentes profissionais do pet shop.
+- Notificações e lembretes para tutores e equipe.
+- Integração com calendário e envio de confirmações.
 - Cadastro separado de clientes, pets, serviços e profissionais.
-- Relatórios mais avançados com filtros por período, tipo de serviço e profissional.
-- Exportação de dados e backups de agenda.
-- Melhorias na usabilidade e automações da rotina do petshop.
-
-- Sincronizacao dos agendamentos com um backend ou banco de dados em nuvem.
-- Login e controle de acesso para diferentes perfis da equipe.
-- Notificacoes e lembretes para tutores e profissionais.
-- Integracao com calendario e envio de confirmacoes por WhatsApp ou SMS.
-- Cadastro separado de clientes, pets, servicos e profissionais.
-- Relatorios com filtros por periodo, servico e profissional.
-- Exportacao de relatorios e backup dos dados.
-- Integracao com telefonia para iniciar chamadas diretamente pelo diretorio de clientes.
+- Relatórios por período e exportação/backup de dados.

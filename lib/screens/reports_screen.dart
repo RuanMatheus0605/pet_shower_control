@@ -55,183 +55,215 @@ class ReportsScreen extends StatelessWidget {
         ),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Seção Financeira
-              _buildSectionTitle('Resumo Financeiro (Total)', darkSlate),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildFinancialCard(
-                      'Realizado',
-                      'R\$ ${realizedRevenue.toStringAsFixed(2)}',
-                      const Color(0xFF059669),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildFinancialCard(
-                      'Pendente',
-                      'R\$ ${pendingRevenue.toStringAsFixed(2)}',
-                      const Color(0xFFD97706),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              _buildFinancialCard(
-                'Faturamento Total (Histórico)',
-                'R\$ ${totalRevenue.toStringAsFixed(2)}',
-                primaryCaramel,
-                isWide: true,
-              ),
-              const SizedBox(height: 24),
-
-              // Seção Serviços Populares
-              _buildSectionTitle('Distribuição de Serviços', darkSlate),
-              const SizedBox(height: 12),
-              serviceCounts.isEmpty
-                  ? _buildEmptyText('Sem dados de serviços disponíveis.')
-                  : Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey.shade100),
+        child: provider.isLoading
+            ? const Center(
+                child: CircularProgressIndicator(color: primaryCaramel),
+              )
+            : provider.errorMessage != null
+            ? Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(provider.errorMessage!, textAlign: TextAlign.center),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: provider.retry,
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Tentar novamente'),
                       ),
-                      child: Column(
-                        children: serviceCounts.entries.map((entry) {
-                          final percent = appointments.isEmpty
-                              ? 0.0
-                              : (entry.value / appointments.length);
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 6.0),
-                            child: Row(
-                              children: [
-                                SizedBox(
-                                  width: 110,
-                                  child: Text(
-                                    entry.key,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: darkSlate,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(4),
-                                    child: LinearProgressIndicator(
-                                      value: percent,
-                                      backgroundColor: Colors.grey.shade100,
-                                      color: primaryCaramel,
-                                      minHeight: 8,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Text(
-                                  '${entry.value} (${(percent * 100).toStringAsFixed(0)}%)',
-                                  style: TextStyle(
-                                    color: Colors.grey.shade600,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
+                    ],
+                  ),
+                ),
+              )
+            : SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Seção Financeira
+                    _buildSectionTitle('Resumo Financeiro (Total)', darkSlate),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildFinancialCard(
+                            'Realizado',
+                            'R\$ ${realizedRevenue.toStringAsFixed(2)}',
+                            const Color(0xFF059669),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildFinancialCard(
+                            'Pendente',
+                            'R\$ ${pendingRevenue.toStringAsFixed(2)}',
+                            const Color(0xFFD97706),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    _buildFinancialCard(
+                      'Faturamento Total (Histórico)',
+                      'R\$ ${totalRevenue.toStringAsFixed(2)}',
+                      primaryCaramel,
+                      isWide: true,
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Seção Serviços Populares
+                    _buildSectionTitle('Distribuição de Serviços', darkSlate),
+                    const SizedBox(height: 12),
+                    serviceCounts.isEmpty
+                        ? _buildEmptyText('Sem dados de serviços disponíveis.')
+                        : Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: Colors.grey.shade100),
                             ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-              const SizedBox(height: 24),
+                            child: Column(
+                              children: serviceCounts.entries.map((entry) {
+                                final percent = appointments.isEmpty
+                                    ? 0.0
+                                    : (entry.value / appointments.length);
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 6.0,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      SizedBox(
+                                        width: 110,
+                                        child: Text(
+                                          entry.key,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: darkSlate,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
+                                          child: LinearProgressIndicator(
+                                            value: percent,
+                                            backgroundColor:
+                                                Colors.grey.shade100,
+                                            color: primaryCaramel,
+                                            minHeight: 8,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Text(
+                                        '${entry.value} (${(percent * 100).toStringAsFixed(0)}%)',
+                                        style: TextStyle(
+                                          color: Colors.grey.shade600,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                    const SizedBox(height: 24),
 
-              // Seção Diretório de Clientes
-              _buildSectionTitle(
-                'Diretório de Clientes (${clientsMap.length})',
-                darkSlate,
-              ),
-              const SizedBox(height: 12),
-              clientsMap.isEmpty
-                  ? _buildEmptyText('Nenhum cliente cadastrado ainda.')
-                  : Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey.shade100),
-                      ),
-                      child: ListView.separated(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: clientsMap.length,
-                        separatorBuilder: (context, index) =>
-                            const Divider(height: 1),
-                        itemBuilder: (context, index) {
-                          final name = clientsMap.keys.elementAt(index);
-                          final phone = clientsMap[name]!;
-                          return Material(
-                            color: Colors.transparent,
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: primaryCaramel.withValues(
-                                  alpha: 0.1,
-                                ),
-                                child: const Icon(
-                                  Icons.person,
-                                  color: primaryCaramel,
-                                ),
-                              ),
-                              title: Text(
-                                name,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: darkSlate,
-                                ),
-                              ),
-                              subtitle: Text(phone),
-                              onTap: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'Cliente: $name • Tel: $phone',
+                    // Seção Diretório de Clientes
+                    _buildSectionTitle(
+                      'Diretório de Clientes (${clientsMap.length})',
+                      darkSlate,
+                    ),
+                    const SizedBox(height: 12),
+                    clientsMap.isEmpty
+                        ? _buildEmptyText('Nenhum cliente cadastrado ainda.')
+                        : Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: Colors.grey.shade100),
+                            ),
+                            child: ListView.separated(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: clientsMap.length,
+                              separatorBuilder: (context, index) =>
+                                  const Divider(height: 1),
+                              itemBuilder: (context, index) {
+                                final name = clientsMap.keys.elementAt(index);
+                                final phone = clientsMap[name]!;
+                                return Material(
+                                  color: Colors.transparent,
+                                  child: ListTile(
+                                    leading: CircleAvatar(
+                                      backgroundColor: primaryCaramel
+                                          .withValues(alpha: 0.1),
+                                      child: const Icon(
+                                        Icons.person,
+                                        color: primaryCaramel,
+                                      ),
                                     ),
-                                    duration: const Duration(seconds: 1),
+                                    title: Text(
+                                      name,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: darkSlate,
+                                      ),
+                                    ),
+                                    subtitle: Text(phone),
+                                    onTap: () {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Cliente: $name • Tel: $phone',
+                                          ),
+                                          duration: const Duration(seconds: 1),
+                                        ),
+                                      );
+                                    },
+                                    trailing: IconButton(
+                                      icon: const Icon(
+                                        Icons.phone_forwarded,
+                                        color: primaryCaramel,
+                                      ),
+                                      tooltip: 'Ligar para Cliente',
+                                      onPressed: () {
+                                        // Apenas feedback visual (ou integração futura com url_launcher)
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              'Ligando para $name ($phone)...',
+                                            ),
+                                            duration: const Duration(
+                                              seconds: 1,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
                                   ),
                                 );
                               },
-                              trailing: IconButton(
-                                icon: const Icon(
-                                  Icons.phone_forwarded,
-                                  color: primaryCaramel,
-                                ),
-                                tooltip: 'Ligar para Cliente',
-                                onPressed: () {
-                                  // Apenas feedback visual (ou integração futura com url_launcher)
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Ligando para $name ($phone)...',
-                                      ),
-                                      duration: const Duration(seconds: 1),
-                                    ),
-                                  );
-                                },
-                              ),
                             ),
-                          );
-                        },
-                      ),
-                    ),
-              const SizedBox(height: 40),
-            ],
-          ),
-        ),
+                          ),
+                    const SizedBox(height: 40),
+                  ],
+                ),
+              ),
       ),
     );
   }

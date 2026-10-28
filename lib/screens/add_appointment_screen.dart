@@ -31,6 +31,7 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
   late double _price;
   late String _notes;
   late String _status;
+  bool _isSaving = false;
 
   final List<String> _petTypes = ['Cão', 'Gato', 'Outro'];
   final List<String> _petSizes = ['Pequeno', 'Médio', 'Grande'];
@@ -163,11 +164,13 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
         .join(' ');
   }
 
-  void _save() {
+  Future<void> _save() async {
+    if (_isSaving) return;
     if (!_formKey.currentState!.validate()) return;
     _formKey.currentState!.save();
 
     final provider = Provider.of<AppointmentProvider>(context, listen: false);
+    final messenger = ScaffoldMessenger.of(context);
     final dateTime = DateTime(
       _selectedDate.year,
       _selectedDate.month,
@@ -196,10 +199,10 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
         notes: _notes,
         status: _status,
       );
-      provider.updateAppointment(updated);
+      if (!await _saveAppointment(provider, updated)) return;
     } else {
       final newApp = Appointment(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        id: '',
         clientName: formattedClientName,
         clientPhone: _clientPhone,
         petName: formattedPetName,
@@ -213,11 +216,12 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
         notes: _notes,
         status: _status,
       );
-      provider.addAppointment(newApp);
+      if (!await _saveAppointment(provider, newApp)) return;
     }
 
+    if (!mounted) return;
     Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
+    messenger.showSnackBar(
       SnackBar(
         content: Text(
           widget.appointment != null
@@ -227,6 +231,32 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
         backgroundColor: const Color(0xFF059669),
       ),
     );
+  }
+
+  Future<bool> _saveAppointment(
+    AppointmentProvider provider,
+    Appointment appointment,
+  ) async {
+    setState(() => _isSaving = true);
+    try {
+      if (widget.appointment != null) {
+        await provider.updateAppointment(appointment);
+      } else {
+        await provider.addAppointment(appointment);
+      }
+      return true;
+    } catch (error) {
+      if (!mounted) return false;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(provider.userFriendlyError(error)),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return false;
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 
   @override
@@ -461,7 +491,7 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
                     width: double.infinity,
                     height: 54,
                     child: ElevatedButton(
-                      onPressed: _save,
+                      onPressed: _isSaving ? null : _save,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryCaramel,
                         shape: RoundedRectangleBorder(
@@ -469,16 +499,25 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
                         ),
                         elevation: 0,
                       ),
-                      child: Text(
-                        widget.appointment != null
-                            ? 'Salvar Alterações'
-                            : 'Confirmar Agendamento',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
+                      child: _isSaving
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(
+                              widget.appointment != null
+                                  ? 'Salvar Alterações'
+                                  : 'Confirmar Agendamento',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
                     ),
                   ),
                   const SizedBox(height: 40),
