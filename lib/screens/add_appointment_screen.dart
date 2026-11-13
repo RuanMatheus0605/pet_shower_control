@@ -299,6 +299,7 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
                     label: 'Nome do Cliente',
                     initialValue: _clientName,
                     icon: Icons.person_outline,
+                    maxLength: 120,
                     textCapitalization: TextCapitalization.words,
                     onSaved: (val) => _clientName = val ?? '',
                     validator: (val) {
@@ -307,6 +308,9 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
                       }
                       if (val.trim().length < 3) {
                         return 'Nome deve conter ao menos 3 caracteres';
+                      }
+                      if (val.trim().length > 120) {
+                        return 'Nome deve conter no máximo 120 caracteres';
                       }
                       return null;
                     },
@@ -324,8 +328,8 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
                         return 'Insira o telefone';
                       }
                       final cleanVal = val.replaceAll(RegExp(r'\D'), '');
-                      if (cleanVal.length < 10) {
-                        return 'O telefone deve ter pelo menos 10 dígitos';
+                      if (cleanVal.length < 10 || cleanVal.length > 11) {
+                        return 'Informe um telefone com 10 ou 11 dígitos';
                       }
                       return null;
                     },
@@ -338,6 +342,7 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
                     label: 'Nome do Pet',
                     initialValue: _petName,
                     icon: Icons.pets_outlined,
+                    maxLength: 120,
                     textCapitalization: TextCapitalization.words,
                     onSaved: (val) => _petName = val ?? '',
                     validator: (val) {
@@ -346,6 +351,9 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
                       }
                       if (val.trim().length < 2) {
                         return 'Nome deve conter ao menos 2 caracteres';
+                      }
+                      if (val.trim().length > 120) {
+                        return 'Nome deve conter no máximo 120 caracteres';
                       }
                       return null;
                     },
@@ -409,14 +417,20 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
                           keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
                           ),
-                          onSaved: (val) =>
-                              _price = double.tryParse(val ?? '0') ?? 0.0,
+                          onSaved: (val) {
+                            final price = _parsePrice(val);
+                            if (price != null) _price = price;
+                          },
                           validator: (val) {
                             if (val == null || val.isEmpty) {
                               return 'Insira o valor';
                             }
-                            if (double.tryParse(val) == null) {
+                            final price = _parsePrice(val);
+                            if (price == null) {
                               return 'Valor inválido';
+                            }
+                            if (price < 0) {
+                              return 'O valor não pode ser negativo';
                             }
                             return null;
                           },
@@ -482,7 +496,11 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
                     initialValue: _notes,
                     icon: Icons.note_alt_outlined,
                     maxLines: 3,
+                    maxLength: 2000,
                     onSaved: (val) => _notes = val ?? '',
+                    validator: (val) => (val?.length ?? 0) > 2000
+                        ? 'As observações devem ter no máximo 2000 caracteres'
+                        : null,
                   ),
                   const SizedBox(height: 32),
 
@@ -547,6 +565,7 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
     int maxLines = 1,
+    int? maxLength,
     TextCapitalization textCapitalization = TextCapitalization.none,
     List<TextInputFormatter>? inputFormatters,
     required FormFieldSetter<String> onSaved,
@@ -556,6 +575,7 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
       initialValue: initialValue,
       keyboardType: keyboardType,
       maxLines: maxLines,
+      maxLength: maxLength,
       textCapitalization: textCapitalization,
       inputFormatters: inputFormatters,
       autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -580,6 +600,11 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
         ),
       ),
     );
+  }
+
+  double? _parsePrice(String? value) {
+    final price = double.tryParse((value ?? '').trim().replaceAll(',', '.'));
+    return price != null && price.isFinite ? price : null;
   }
 
   Widget _buildDropdownField({

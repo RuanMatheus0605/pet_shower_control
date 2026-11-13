@@ -58,8 +58,17 @@ class AuthService {
     }
   }
 
-  Future<void> signOut() async {
-    await _auth.signOut();
+  Future<String?> signOut() async {
+    try {
+      await _auth.signOut();
+      return null;
+    } on FirebaseAuthException catch (e) {
+      return _mapFirebaseError(e);
+    } on FirebaseException {
+      return 'Não foi possível encerrar a sessão. Verifique sua conexão e tente novamente.';
+    } catch (_) {
+      return 'Não foi possível encerrar a sessão. Tente novamente.';
+    }
   }
 
   String _mapFirebaseError(FirebaseAuthException error) {

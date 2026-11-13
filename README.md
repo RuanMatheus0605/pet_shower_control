@@ -34,6 +34,22 @@ atendimentos e um resumo financeiro da rotina do estabelecimento.
 - Estados de carregamento, lista vazia, erro de leitura e falhas de gravação.
 - Regras de segurança com validação de proprietário, campos e tipos.
 
+### Trabalho 4 — Aplicativo final
+
+- Continuidade do aplicativo e do repositório desenvolvidos nos Trabalhos 1, 2
+  e 3, sem criação de um projeto novo.
+- Fluxo final de autenticação: cadastro, login, logout e recuperação de senha.
+- Navegação protegida pela sessão do Firebase Authentication.
+- CRUD completo de agendamentos no Firestore, com confirmação de exclusão,
+  atualização da lista em tempo real e dados isolados pelo UID.
+- Validação de e-mail, senha, tutor, pet, telefone, preço e observações; estados
+  de carregamento, lista vazia, falhas de rede e erros de persistência com
+  feedback na interface.
+- Agenda por data, filtros e status, métricas diárias, relatórios financeiros,
+  distribuição de serviços e diretório de clientes.
+- Regras do Firestore incluídas em `firestore.rules`, negando acesso a dados de
+  outros usuários.
+
 ## Tecnologias e dependências
 
 - Flutter e Dart.
@@ -89,19 +105,23 @@ essa identidade da sessão autenticada.
 
 ### Passos
 
-1. Configure o projeto Firebase e os arquivos/opções de plataforma. O projeto
-   já inclui `lib/firebase_options.dart` e a configuração Android.
+1. Configure os aplicativos do seu projeto Firebase. O repositório inclui
+   `lib/firebase_options.dart` e `android/app/google-services.json`; se usar
+   outro projeto Firebase, gere novamente as opções e a configuração Android
+   para ele.
 2. No Firebase Console, habilite **Authentication → Email/Password**.
 3. Crie o banco de dados **Cloud Firestore**.
-4. Na raiz do repositório, publique as regras incluídas:
+4. Autentique o Firebase CLI e publique as regras incluídas no projeto correto:
 
    ```bash
-   firebase deploy --only firestore:rules
+   firebase login
+   firebase deploy --only firestore:rules --project petshower-b634d
    ```
 
-   O `firebase.json` aponta para `firestore.rules`. Não use regras abertas;
-   a aplicação depende das regras por UID descritas abaixo.
-5. Instale as dependências e execute:
+   O `firebase.json` aponta para `firestore.rules`. Para outro projeto, substitua
+   o valor de `--project` pelo ID correspondente. Não use regras abertas: a
+   aplicação depende das regras por UID descritas abaixo.
+5. Instale as dependências e execute em um dispositivo ou emulador Android:
 
    ```bash
    flutter pub get
@@ -223,13 +243,20 @@ service cloud.firestore {
 }
 ```
 
-## Screenshots e evidências do CRUD
+## Screenshots da versão final
 
-As capturas abaixo mostram o cadastro, a lista atualizada após a leitura,
-a edição, a confirmação e o resultado da exclusão, além do estado sem
-agendamentos para a data selecionada.
+As capturas abaixo registram os fluxos de autenticação e CRUD disponíveis na
+versão final do aplicativo. Use uma conta de demonstração e dados fictícios
+durante a entrevista; não inclua senhas, tokens ou dados pessoais reais nas
+evidências enviadas.
 
-### CREATE — agendamento cadastrado
+### Autenticação
+
+![Login](screenshots/tela-login.jpeg)
+![Cadastro de usuário](screenshots/tela-criarconta.jpeg)
+![Recuperação de senha](screenshots/tela-redefinirsenha.jpeg)
+
+### CREATE — cadastro de agendamento
 
 ![Agendamento após o cadastro](screenshots/crud-create.jpeg)
 
@@ -253,25 +280,9 @@ agendamentos para a data selecionada.
 
 ![Agenda sem agendamentos na data selecionada](screenshots/estado-vazio.jpeg)
 
-As capturas comprovam os estados visuais mostrados. Para demonstrar também a
-persistência após reabrir o aplicativo e o isolamento entre contas, execute os
-testes com duas contas no projeto Firebase configurado para a entrega.
+### Relatórios financeiros e clientes
 
-### Screenshots dos trabalhos anteriores
+![Resumo financeiro do pet shop](screenshots/resumo-financeiro.jpeg)
 
-![Tela inicial](screenshots/tela-inicial.jpeg)
-![Tela de login](screenshots/tela-login.jpeg)
-![Tela de criar conta](screenshots/tela-criarconta.jpeg)
-![Tela de redefinir senha](screenshots/tela-redefinirsenha.jpeg)
-![Cadastro de agendamento](screenshots/tela-de-cadastro.jpeg)
-![Resumo financeiro](screenshots/resumo-financeiro.jpeg)
-![Modal de exclusão](screenshots/modal-exclusao.jpeg)
-![Configuração do Firebase](screenshots/config-firebaseconsole.jpeg)
-
-## Próximas evoluções — Trabalho 4
-
-- Perfis e permissões para diferentes profissionais do pet shop.
-- Notificações e lembretes para tutores e equipe.
-- Integração com calendário e envio de confirmações.
-- Cadastro separado de clientes, pets, serviços e profissionais.
-- Relatórios por período e exportação/backup de dados.
+Para demonstrar a persistência após reabrir o aplicativo e o isolamento entre
+contas, use duas contas de teste no projeto Firebase configurado para a entrega.

@@ -48,7 +48,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    _showMessage('Conta criada com sucesso!');
+    Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
   void _showMessage(String message) {

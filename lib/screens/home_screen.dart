@@ -17,6 +17,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   DateTime _selectedDate = DateTime.now();
   String _statusFilter = 'Todos';
+  bool _isSigningOut = false;
 
   @override
   Widget build(BuildContext context) {
@@ -91,11 +92,30 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.logout, color: darkSlate, size: 24),
+            icon: _isSigningOut
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.logout, color: darkSlate, size: 24),
             tooltip: 'Logout',
-            onPressed: () async {
-              await AuthService().signOut();
-            },
+            onPressed: _isSigningOut
+                ? null
+                : () async {
+                    setState(() => _isSigningOut = true);
+                    final errorMessage = await AuthService().signOut();
+                    if (!context.mounted) return;
+                    setState(() => _isSigningOut = false);
+                    if (errorMessage != null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(errorMessage),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  },
           ),
           const SizedBox(width: 8),
         ],
